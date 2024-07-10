@@ -1,0 +1,28 @@
+when:
+  - branch: [main]
+    event: push
+
+steps:
+  app-build:
+    image: golang
+    pull: true
+    commands:
+      - GOOS=linux GOARCH=amd64 go build -o bin/tsshd-amd64 ./cmd/tsshd/
+      - GOOS=linux GOARCH=arm64 go build -o bin/tsshd-arm64 ./cmd/tsshd/
+
+  push-to-artifactory:
+    image: vividboarder/drone-webdav
+    settings:
+      file: "{bin/tsshd-arm64,bin/tsshd-amd64}"
+      username: admin
+      password:
+        from_secret: artifactory_password
+      destination:
+        from_secret: artifactory_url
+    secrets: [artifactory_url, artifactory_password]
+
+  schedule-deploy:
+    image: alpine/curl
+    commands:
+      - curl -f -X POST $DEPLOY_HOOK_URL
+    secrets: [DEPLOY_HOOK_URL]
