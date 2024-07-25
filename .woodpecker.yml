@@ -1,5 +1,5 @@
 when:
-  - branch: [main]
+  - branch: [customized]
     event: push
 
 steps:
